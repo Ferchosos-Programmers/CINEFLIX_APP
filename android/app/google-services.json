@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "739570764681",
+    "project_id": "cineflix-fdac2",
+    "storage_bucket": "cineflix-fdac2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:739570764681:android:787bcfa97f745a6cabaf58",
+        "android_client_info": {
+          "package_name": "com.example.cineflix"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCY64b8197REG2tyrBnKlFslW3gbDV8A3E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
