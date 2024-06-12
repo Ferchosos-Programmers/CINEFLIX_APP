@@ -1,3 +1,4 @@
+import 'package:cineflix/screens/Video.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -121,14 +122,12 @@ class _MyMovieState extends State<MyMovie> {
             itemBuilder: (BuildContext context, int index) {
               return GestureDetector(
                 onTap: () {
-                  // Aquí puedes implementar la lógica para reproducir el video
-                  // Cuando se haga clic en la imagen.
-                  // Puedes utilizar un paquete como 'video_player' para reproducir el video.
-                  // Para este ejemplo, simplemente mostraré un mensaje.
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                        content: Text(
-                            'Reproducir video de ${popularMovies[index].title}')),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          VideoScreen(videoUrl: 'URL_DEL_VIDEO_AQUI'),
+                    ),
                   );
                 },
                 child: Container(
