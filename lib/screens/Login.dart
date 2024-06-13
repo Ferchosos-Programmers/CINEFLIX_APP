@@ -1,4 +1,4 @@
-import 'package:cineflix/screens/Movie.dart';
+import 'package:cineflix/screens/AgregarMovie.dart';
 import 'package:cineflix/screens/Registro.dart';
 import 'package:flutter/material.dart';
 import 'package:cineflix/main.dart';
@@ -38,7 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => MovieApp(),
+          builder: (context) => AgregarMovie(),
         ),
       );
     } on FirebaseAuthException catch (e) {
