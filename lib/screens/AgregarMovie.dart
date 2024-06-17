@@ -40,13 +40,13 @@ class _HomeState extends State<Home> {
   final TextEditingController _directorController = TextEditingController();
   final TextEditingController _genreController = TextEditingController();
   final TextEditingController _yearController = TextEditingController();
-  final TextEditingController _videoLinkController = TextEditingController();
-  final TextEditingController _imageLinkController =
-      TextEditingController(); // Nuevo controlador para la URL de la imagen
+  final TextEditingController _imageLinkController = TextEditingController();
 
   final ImagePicker _picker = ImagePicker();
   File? _imageFile;
+  File? _videoFile;
   String? _imageLink;
+  String? _videoLink;
 
   @override
   void dispose() {
@@ -54,9 +54,7 @@ class _HomeState extends State<Home> {
     _directorController.dispose();
     _genreController.dispose();
     _yearController.dispose();
-    _videoLinkController.dispose();
-    _imageLinkController
-        .dispose(); // Dispose del controlador de la URL de la imagen
+    _imageLinkController.dispose();
     super.dispose();
   }
 
@@ -65,8 +63,17 @@ class _HomeState extends State<Home> {
     if (pickedFile != null) {
       setState(() {
         _imageFile = File(pickedFile.path);
-        _imageLink =
-            null; // Resetear la URL de la imagen si se selecciona una nueva imagen desde la galería
+        _imageLink = null;
+      });
+    }
+  }
+
+  Future<void> _pickVideo() async {
+    final pickedFile = await _picker.pickVideo(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _videoFile = File(pickedFile.path);
+        _videoLink = null;
       });
     }
   }
@@ -87,6 +94,22 @@ class _HomeState extends State<Home> {
     }
   }
 
+  Future<void> _uploadVideo() async {
+    if (_videoFile != null) {
+      final fileName = _videoFile!.path.split('/').last;
+      final storageRef =
+          FirebaseStorage.instance.ref().child('movie_videos/$fileName');
+      final uploadTask = storageRef.putFile(_videoFile!);
+
+      final taskSnapshot = await uploadTask.whenComplete(() {});
+      final downloadUrl = await taskSnapshot.ref.getDownloadURL();
+
+      setState(() {
+        _videoLink = downloadUrl;
+      });
+    }
+  }
+
   Future<void> _saveMovie() async {
     if (_formKey.currentState!.validate()) {
       if (_imageFile == null && _imageLinkController.text.isEmpty) {
@@ -96,20 +119,28 @@ class _HomeState extends State<Home> {
         return;
       }
 
+      if (_videoFile == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Please pick a video')),
+        );
+        return;
+      }
+
       if (_imageFile != null) {
         await _uploadImage();
+      }
+
+      if (_videoFile != null) {
+        await _uploadVideo();
       }
 
       final String title = _titleController.text;
       final String director = _directorController.text;
       final String genre = _genreController.text;
       final int year = int.parse(_yearController.text);
-      final String videoLink = _videoLinkController.text;
-      final String imageLink = _imageLink ??
-          _imageLinkController
-              .text; // Usar la URL ingresada si no se seleccionó una imagen
+      final String videoLink = _videoLink!;
+      final String imageLink = _imageLink ?? _imageLinkController.text;
 
-      // Add movie to Firestore
       await FirebaseFirestore.instance.collection('movies').add({
         'title': title,
         'director': director,
@@ -127,11 +158,12 @@ class _HomeState extends State<Home> {
       _directorController.clear();
       _genreController.clear();
       _yearController.clear();
-      _videoLinkController.clear();
       _imageLinkController.clear();
       setState(() {
         _imageFile = null;
         _imageLink = null;
+        _videoFile = null;
+        _videoLink = null;
       });
     }
   }
@@ -192,30 +224,24 @@ class _HomeState extends State<Home> {
                   return null;
                 },
               ),
-              TextFormField(
-                controller: _videoLinkController,
-                decoration: InputDecoration(labelText: 'Enlace de Video'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingrese un enlace de video';
-                  }
-                  return null;
-                },
+              SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: _pickImage,
+                child: Text('Seleccionar Imagen'),
               ),
-              // SizedBox(height: 10),
-              // ElevatedButton(
-              //   onPressed: _pickImage,
-              //   child: Text('Seleccionar Imagen'),
-              // ),
-              // if (_imageFile != null) ...[
-              //   SizedBox(height: 10),
-              //   Image.file(_imageFile!, height: 150),
-              // ],
-              // SizedBox(height: 10),
-              TextFormField(
-                controller: _imageLinkController,
-                decoration: InputDecoration(labelText: 'Ingrese URL de Imagen'),
+              if (_imageFile != null) ...[
+                SizedBox(height: 10),
+                Image.file(_imageFile!, height: 150),
+              ],
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _pickVideo,
+                child: Text('Seleccionar Video'),
               ),
+              if (_videoFile != null) ...[
+                SizedBox(height: 10),
+                Text('Video seleccionado: ${_videoFile!.path.split('/').last}'),
+              ],
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {

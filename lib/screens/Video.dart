@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import 'package:chewie/chewie.dart';
 
 class VideoScreen extends StatefulWidget {
   final String videoUrl;
@@ -11,29 +12,66 @@ class VideoScreen extends StatefulWidget {
 }
 
 class _VideoScreenState extends State<VideoScreen> {
-  late VideoPlayerController _controller;
-  late Future<void> _initializeVideoPlayerFuture;
+  late VideoPlayerController _videoPlayerController;
+  ChewieController? _chewieController;
 
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.network(widget.videoUrl);
-    _initializeVideoPlayerFuture = initializeVideoPlayer();
+    _initializePlayer();
   }
 
-  Future<void> initializeVideoPlayer() async {
+  Future<void> _initializePlayer() async {
+    _videoPlayerController = VideoPlayerController.network(widget.videoUrl);
+
     try {
-      await _controller.initialize();
+      await _videoPlayerController.initialize();
+      _chewieController = ChewieController(
+        videoPlayerController: _videoPlayerController,
+        aspectRatio: _videoPlayerController.value.aspectRatio,
+        autoPlay: true,
+        looping: false,
+        allowedScreenSleep: false,
+        autoInitialize: true,
+        allowFullScreen: true,
+        allowMuting: true,
+        additionalOptions: (context) {
+          return <OptionItem>[
+            OptionItem(
+              onTap: () {
+                _videoPlayerController.seekTo(
+                    _videoPlayerController.value.position -
+                        Duration(seconds: 10));
+              },
+              iconData: Icons.replay_10,
+              title: 'Rewind 10 seconds',
+            ),
+            OptionItem(
+              onTap: () {
+                _videoPlayerController.seekTo(
+                    _videoPlayerController.value.position +
+                        Duration(seconds: 10));
+              },
+              iconData: Icons.forward_10,
+              title: 'Forward 10 seconds',
+            ),
+          ];
+        },
+      );
+
       setState(() {});
-      _controller.play();
     } catch (e) {
-      print('Error al inicializar el controlador de video: $e');
+      print('Error initializing video player: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load video')),
+      );
     }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _videoPlayerController.dispose();
+    _chewieController?.dispose();
     super.dispose();
   }
 
@@ -43,35 +81,14 @@ class _VideoScreenState extends State<VideoScreen> {
       appBar: AppBar(
         title: Text('Video Player'),
       ),
-      body: FutureBuilder(
-        future: _initializeVideoPlayerFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else {
-            return Center(
-              child: AspectRatio(
-                aspectRatio: _controller.value.aspectRatio,
-                child: VideoPlayer(_controller),
-              ),
-            );
-          }
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          setState(() {
-            _controller.value.isPlaying
-                ? _controller.pause()
-                : _controller.play();
-          });
-        },
-        child: Icon(
-          _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
-        ),
-      ),
+      body: _chewieController != null &&
+              _chewieController!.videoPlayerController.value.isInitialized
+          ? Chewie(
+              controller: _chewieController!,
+            )
+          : Center(
+              child: CircularProgressIndicator(),
+            ),
     );
   }
 }
