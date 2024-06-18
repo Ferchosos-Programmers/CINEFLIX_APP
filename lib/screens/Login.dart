@@ -1,8 +1,6 @@
-import 'package:cineflix/screens/AgregarMovie.dart';
 import 'package:cineflix/screens/MovieGallery.dart';
 import 'package:cineflix/screens/Registro.dart';
 import 'package:flutter/material.dart';
-import 'package:cineflix/main.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 void main() {
@@ -29,13 +27,27 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  Future<void> login(context) async {
-    try {
-      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: emailController.text,
-        password: passwordController.text,
+  Future<void> login(BuildContext context) async {
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content:
+              Text('Por favor, ingrese su correo electrónico y contraseña.'),
+          backgroundColor: Colors.white,
+        ),
       );
-      // Navigate to the next screen after successful login
+      return;
+    }
+
+    try {
+      // ignore: unused_local_variable
+      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -43,37 +55,31 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       );
     } on FirebaseAuthException catch (e) {
-      // Show alert dialog for authentication errors
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('Error de credenciales'),
-            content: Text(_getErrorMessage(e.code)),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: Text('OK'),
-              ),
-            ],
-          );
-        },
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_getErrorMessage(e.code)),
+          backgroundColor: Colors.white,
+        ),
       );
     } catch (e) {
       print(e);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Ocurrió un error inesperado.'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
   String _getErrorMessage(String code) {
     switch (code) {
       case 'user-not-found':
-        return 'No user found for that email.';
+        return 'No se encontró un usuario con ese correo electrónico.';
       case 'wrong-password':
-        return 'Wrong password provided for that user.';
+        return 'Contraseña incorrecta proporcionada para ese usuario.';
       default:
-        return 'Hay un error : $code';
+        return 'Ocurrió un error: $code';
     }
   }
 
@@ -123,9 +129,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () {
-                    // Lógica para iniciar sesión
                     login(context);
-                    print('Ir a la pantalla de cartelera');
                   },
                   child: const Text(
                     'Iniciar Sesión',
@@ -141,7 +145,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         builder: (context) => Registro(),
                       ),
                     );
-                    print('Ir a la pantalla de registro');
                   },
                   child: const Text(
                     '¿No tienes una cuenta?  Regístrate aquí',

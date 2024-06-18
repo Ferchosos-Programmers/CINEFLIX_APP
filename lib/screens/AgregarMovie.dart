@@ -114,14 +114,14 @@ class _HomeState extends State<Home> {
     if (_formKey.currentState!.validate()) {
       if (_imageFile == null && _imageLinkController.text.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Please pick an image or enter an image URL')),
+          SnackBar(content: Text('Elija una imagen')),
         );
         return;
       }
 
       if (_videoFile == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Please pick a video')),
+          SnackBar(content: Text('Por favor elige un video')),
         );
         return;
       }
@@ -151,7 +151,7 @@ class _HomeState extends State<Home> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Movie added successfully!')),
+        SnackBar(content: Text('Película agregada exitosamente!')),
       );
 
       _titleController.clear();
@@ -165,6 +165,10 @@ class _HomeState extends State<Home> {
         _videoFile = null;
         _videoLink = null;
       });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Por favor, llene todos los campos')),
+      );
     }
   }
 
